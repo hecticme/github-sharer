@@ -1,0 +1,18 @@
+{
+  "name": "github-sharer",
+  "version": "1.0.0",
+  "description": "Copy content from GitHub to your clipboard.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ."
+  },
+  "author": "hecticme (H. Ngọc Minh)",
+  "license": "MIT",
+  "devDependencies": {
+    "@hecticme/eslint-config": "^0.1.0",
+    "chrome-types": "^0.1.383",
+    "eslint": "^9.37.0"
+  }
+}
