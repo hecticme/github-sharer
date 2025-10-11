@@ -1,0 +1,23 @@
+{
+  "name": "Github Sharer",
+  "description": "Copy content from GitHub to your clipboard.",
+  "version": "1.0",
+  "manifest_version": 3,
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": "images/github_sharer_128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/pull/*"],
+      "js": ["index.js"]
+    }
+  ],
+  "icons": {
+    "16": "images/github_sharer_16.png",
+    "32": "images/github_sharer_32.png",
+    "48": "images/github_sharer_48.png",
+    "128": "images/github_sharer_128.png"
+  }
+}
