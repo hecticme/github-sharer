@@ -1,8 +1,11 @@
+const outputElement = /** @type {HTMLTextAreaElement} */ (document.getElementById('output'))
+const copyButtonElement = document.getElementById('copy')
+
 async function getPRInfo() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
 
   if (!tab.url.includes('github.com') || !tab.url.includes('/pull/')) {
-    document.getElementById('output').value = 'Not a GitHub PR page.'
+    outputElement.value = 'Not a GitHub PR page.'
     return
   }
 
@@ -10,26 +13,24 @@ async function getPRInfo() {
     target: { tabId: tab.id },
     func: () => {
       const pathParts = window.location.pathname.split('/')
-      const repoName = pathParts[2] || ''
-      const project = repoName
+      // github.com/owner/repo-name/pull/7/files --> ['', 'owner', 'repo-name', 'pull', '7', 'files']
+      const repoName = pathParts.at(2) ?? ''
+      const projectName = repoName
         .replace(/[-_]/g, ' ')
-        .replace(/\b\w/g, c => c.toUpperCase())
+        .replace(/\b\w/g, substring => substring.toUpperCase())
 
-      const titleEl = document.querySelector('.gh-header-title .js-issue-title')
-      const title = titleEl ? titleEl.innerText.trim() : '(No title found)'
+      const titleElement = /** @type {HTMLElement} */ (document.querySelector('.gh-header-title .js-issue-title'))
+      const title = titleElement ? titleElement.innerText.trim() : '(No title found)'
 
-      const reference = window.location.href
-
-      return `[Project] ${project}\n[Task]: review: ${title}\n[Assignee]\n[Reference] ${reference}`
+      return `[Project] ${projectName}\n[Task]: review: ${title}\n[Assignee]\n[Reference] ${window.location.href}`
     },
   })
 
-  document.getElementById('output').value = result
+  outputElement.value = result
 }
 
-document.getElementById('copy').addEventListener('click', () => {
-  const text = document.getElementById('output').value
-  navigator.clipboard.writeText(text)
+copyButtonElement.addEventListener('click', () => {
+  navigator.clipboard.writeText(outputElement.value)
 })
 
 getPRInfo()
