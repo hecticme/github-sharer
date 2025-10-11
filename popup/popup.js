@@ -22,7 +22,9 @@ async function getPRInfo() {
       const titleElement = /** @type {HTMLElement} */ (document.querySelector('.gh-header-title .js-issue-title'))
       const title = titleElement ? titleElement.innerText.trim() : '(No title found)'
 
-      return `[Project] ${projectName}\n[Task]: review: ${title}\n[Assignee]\n[Reference] ${window.location.href}`
+      const pullRequestHref = `${window.location.origin}/${pathParts.slice(1, 5).join('/')}`
+
+      return `[Project] ${projectName}\n[Task]: review: ${title}\n[Assignee]\n[Reference] ${pullRequestHref}`
     },
   })
 
