@@ -128,6 +128,10 @@ button {
   font-weight: 500;
 }
 
+.main > .label {
+  align-self: start;
+}
+
 .select {
   outline: 1px solid transparent;
 
