@@ -41,8 +41,18 @@ async function getPRInfo() {
   outputElement.value = result
 }
 
-copyButtonElement.addEventListener('click', () => {
-  navigator.clipboard.writeText(outputElement.value)
+let copyTimeout = null
+
+copyButtonElement.addEventListener('click', async () => {
+  await navigator.clipboard.writeText(outputElement.value)
+
+  copyButtonElement.innerText = '✅ Copied!'
+  if (copyTimeout !== null) {
+    clearTimeout(copyTimeout)
+  }
+  copyTimeout = setTimeout(() => {
+    copyButtonElement.innerText = 'Copy'
+  }, 1000)
 })
 
 getPRInfo()
