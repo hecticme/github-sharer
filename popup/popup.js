@@ -1,4 +1,4 @@
-const assigneeSelectElement = document.getElementById('assignee')
+const assigneeSelectElement = /** @type {HTMLSelectElement} */ (document.getElementById('assignee'))
 const outputElement = /** @type {HTMLTextAreaElement} */ (document.getElementById('output'))
 const copyButtonElement = document.getElementById('copy')
 
@@ -42,6 +42,12 @@ async function getPRInfo() {
     disableCopyButton()
     disableAssigneeSelectElement()
     return
+  }
+
+  const { lastAssignee = '@ort-frontend' } = await chrome.storage.local.get(['lastAssignee'])
+  data.assignee = lastAssignee
+  if (assigneeSelectElement) {
+    assigneeSelectElement.value = lastAssignee
   }
 
   const [{ result }] = await chrome.scripting.executeScript({
@@ -92,8 +98,14 @@ copyButtonElement.addEventListener('click', async () => {
   }, 1000)
 })
 
-assigneeSelectElement.addEventListener('change', event => {
-  data.assignee = /** @type {HTMLSelectElement} */ (event.target).value
+assigneeSelectElement.addEventListener('change', async event => {
+  const { value } = /** @type {HTMLSelectElement} */ (event.target)
+
+  data.assignee = value
+  await chrome.storage.local.set({
+    lastAssignee: value,
+  })
+
   refreshOutput()
 })
 

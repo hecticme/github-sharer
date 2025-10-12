@@ -3,7 +3,7 @@
   "description": "Copy content from GitHub to your clipboard.",
   "version": "1.0",
   "manifest_version": 3,
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": "images/github_sharer_128.png"
