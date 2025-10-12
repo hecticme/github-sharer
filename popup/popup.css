@@ -81,7 +81,7 @@ button {
     outline 250ms var(--transition-timing-ease-out);
 }
 
-.textarea:hover {
+.textarea:not(:disabled):hover {
   border-color: var(--color-border-input-hover);
 }
 
@@ -108,7 +108,9 @@ button {
     box-shadow 250ms var(--transition-timing-ease-out);
 }
 
-.button:disabled {
+.button:disabled,
+.select:disabled,
+.textarea:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -153,9 +155,4 @@ button {
 
 .select:focus-visible {
   outline-color: var(--color-border-input-focus);
-}
-
-.select:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
 }
