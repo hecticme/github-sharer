@@ -1,9 +1,11 @@
+const actionSelectElement = /** @type {HTMLSelectElement} */ (document.getElementById('action'))
 const assigneeSelectElement = /** @type {HTMLSelectElement} */ (document.getElementById('assignee'))
 const outputElement = /** @type {HTMLTextAreaElement} */ (document.getElementById('output'))
 const copyButtonElement = document.getElementById('copy')
 
 const data = {
   projectName: '',
+  action: 'review',
   title: '',
   assignee: '@ort-frontend',
   referenceHref: '',
@@ -20,8 +22,8 @@ function disableAssigneeSelectElement() {
 }
 
 function refreshOutput() {
-  const { projectName, title, assignee, referenceHref } = data
-  outputElement.value = `[Project] ${projectName}\n[Task]: review: ${title}\n[Assignee] ${assignee}\n[Reference] ${referenceHref}`
+  const { projectName, action, title, assignee, referenceHref } = data
+  outputElement.value = `[Project] ${projectName}\n[Task]: ${action}: ${title}\n[Assignee] ${assignee}\n[Reference] ${referenceHref}`
 }
 
 async function getPRInfo() {
@@ -42,6 +44,12 @@ async function getPRInfo() {
     disableCopyButton()
     disableAssigneeSelectElement()
     return
+  }
+
+  const { lastAction = 'review' } = await chrome.storage.local.get(['lastAction'])
+  data.action = lastAction
+  if (actionSelectElement) {
+    actionSelectElement.value = lastAction
   }
 
   const { lastAssignee = '@ort-frontend' } = await chrome.storage.local.get(['lastAssignee'])
@@ -104,6 +112,17 @@ assigneeSelectElement.addEventListener('change', async event => {
   data.assignee = value
   await chrome.storage.local.set({
     lastAssignee: value,
+  })
+
+  refreshOutput()
+})
+
+actionSelectElement.addEventListener('change', async event => {
+  const { value } = /** @type {HTMLSelectElement} */ (event.target)
+
+  data.action = value
+  await chrome.storage.local.set({
+    lastAction: value,
   })
 
   refreshOutput()
