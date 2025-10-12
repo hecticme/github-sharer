@@ -11,14 +11,11 @@ const data = {
   referenceHref: '',
 }
 
-function disableCopyButton() {
-  if (!copyButtonElement) return
-  copyButtonElement.setAttribute('disabled', '')
-}
-
-function disableAssigneeSelectElement() {
-  if (!assigneeSelectElement) return
-  assigneeSelectElement.setAttribute('disabled', '')
+function disableEverything() {
+  copyButtonElement?.setAttribute('disabled', '')
+  actionSelectElement?.setAttribute('disabled', '')
+  assigneeSelectElement?.setAttribute('disabled', '')
+  outputElement?.setAttribute('disabled', '')
 }
 
 function refreshOutput() {
@@ -31,8 +28,7 @@ async function getPRInfo() {
 
   if (!tab.url.includes('github.com')) {
     outputElement.value = 'This extension only works on Github.'
-    disableCopyButton()
-    disableAssigneeSelectElement()
+    disableEverything()
     return
   }
 
@@ -41,8 +37,7 @@ async function getPRInfo() {
 
   if (!isPullRequest && !isIssue) {
     outputElement.value = 'Must be a pull request or an issue.'
-    disableCopyButton()
-    disableAssigneeSelectElement()
+    disableEverything()
     return
   }
 
