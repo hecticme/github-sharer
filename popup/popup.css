@@ -1,5 +1,5 @@
 :root {
-  --transition-timing-base: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-timing-ease-out: cubic-bezier(0, 0, 0.2, 1);
 
   --color-border-input: #cbd5e1;
   --color-border-input-hover: #adb7c5;
@@ -77,8 +77,8 @@ button {
   background-color: var(--color-background-body);
 
   transition:
-    border 250ms var(--transition-timing-base),
-    outline 250ms var(--transition-timing-base);
+    border 250ms var(--transition-timing-ease-out),
+    outline 250ms var(--transition-timing-ease-out);
 }
 
 .textarea:hover {
@@ -104,8 +104,8 @@ button {
   box-shadow: 0 0 0 0 var(--color-background-button);
 
   transition:
-    background-color 250ms var(--transition-timing-base),
-    box-shadow 250ms var(--transition-timing-base);
+    background-color 250ms var(--transition-timing-ease-out),
+    box-shadow 250ms var(--transition-timing-ease-out);
 }
 
 .button:disabled {
@@ -143,8 +143,8 @@ button {
   background-color: inherit;
 
   transition:
-    border 250ms var(--transition-timing-base),
-    outline 250ms var(--transition-timing-base);
+    border 250ms var(--transition-timing-ease-out),
+    outline 250ms var(--transition-timing-ease-out);
 }
 
 .select:not(:disabled):hover {
