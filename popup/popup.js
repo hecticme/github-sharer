@@ -1,10 +1,11 @@
+const assigneeSelectElement = document.getElementById('assignee')
 const outputElement = /** @type {HTMLTextAreaElement} */ (document.getElementById('output'))
 const copyButtonElement = document.getElementById('copy')
 
 const data = {
   projectName: '',
   title: '',
-  assignee: '',
+  assignee: '@ort-frontend',
   referenceHref: '',
 }
 
@@ -13,12 +14,23 @@ function disableCopyButton() {
   copyButtonElement.setAttribute('disabled', '')
 }
 
+function disableAssigneeSelectElement() {
+  if (!assigneeSelectElement) return
+  assigneeSelectElement.setAttribute('disabled', '')
+}
+
+function refreshOutput() {
+  const { projectName, title, assignee, referenceHref } = data
+  outputElement.value = `[Project] ${projectName}\n[Task]: review: ${title}\n[Assignee] ${assignee}\n[Reference] ${referenceHref}`
+}
+
 async function getPRInfo() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
 
   if (!tab.url.includes('github.com')) {
     outputElement.value = 'This extension only works on Github.'
     disableCopyButton()
+    disableAssigneeSelectElement()
     return
   }
 
@@ -28,6 +40,7 @@ async function getPRInfo() {
   if (!isPullRequest && !isIssue) {
     outputElement.value = 'Must be a pull request or an issue.'
     disableCopyButton()
+    disableAssigneeSelectElement()
     return
   }
 
@@ -62,7 +75,7 @@ async function getPRInfo() {
     referenceHref: result.referenceHref,
   })
 
-  outputElement.value = `[Project] ${data.projectName}\n[Task]: review: ${data.title}\n[Assignee]\n[Reference] ${data.referenceHref}`
+  refreshOutput()
 }
 
 let copyTimeout = null
@@ -77,6 +90,11 @@ copyButtonElement.addEventListener('click', async () => {
   copyTimeout = setTimeout(() => {
     copyButtonElement.innerText = 'Copy'
   }, 1000)
+})
+
+assigneeSelectElement.addEventListener('change', event => {
+  data.assignee = /** @type {HTMLSelectElement} */ (event.target).value
+  refreshOutput()
 })
 
 getPRInfo()

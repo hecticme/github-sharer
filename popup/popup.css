@@ -1,9 +1,9 @@
 :root {
   --transition-timing-base: cubic-bezier(0.4, 0, 0.2, 1);
 
-  --color-border-textarea: #cbd5e1;
-  --color-border-textarea-hover: #adb7c5;
-  --color-border-textarea-focus: #151515;
+  --color-border-input: #cbd5e1;
+  --color-border-input-hover: #adb7c5;
+  --color-border-input-focus: #151515;
 
   --color-background-body: #ffffff;
   --color-background-button: #151515;
@@ -14,9 +14,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-border-textarea: #3f3f46;
-    --color-border-textarea-hover: #52525b;
-    --color-border-textarea-focus: #e4e4e7;
+    --color-border-input: #3f3f46;
+    --color-border-input-hover: #52525b;
+    --color-border-input-focus: #e4e4e7;
 
     --color-background-body: #111111;
     --color-background-button: #e4e4e7;
@@ -63,7 +63,7 @@ button {
   outline: 1px solid transparent;
 
   border-radius: 0.5rem;
-  border: 1px solid var(--color-border-textarea);
+  border: 1px solid var(--color-border-input);
 
   padding: 0.5rem;
   height: 10rem;
@@ -82,11 +82,11 @@ button {
 }
 
 .textarea:hover {
-  border-color: var(--color-border-textarea-hover);
+  border-color: var(--color-border-input-hover);
 }
 
 .textarea:focus-visible {
-  outline-color: var(--color-border-textarea-focus);
+  outline-color: var(--color-border-input-focus);
 }
 
 .button {
@@ -122,4 +122,36 @@ button {
   border-top: 1.5px solid var(--color-text-body);
 
   width: 30%;
+}
+
+.label {
+  font-weight: 500;
+}
+
+.select {
+  outline: 1px solid transparent;
+
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border-input);
+
+  padding: 0.5rem 0.25rem;
+
+  background-color: inherit;
+
+  transition:
+    border 250ms var(--transition-timing-base),
+    outline 250ms var(--transition-timing-base);
+}
+
+.select:not(:disabled):hover {
+  border-color: var(--color-border-input-hover);
+}
+
+.select:focus-visible {
+  outline-color: var(--color-border-input-focus);
+}
+
+.select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
