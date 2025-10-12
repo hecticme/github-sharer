@@ -1,11 +1,17 @@
 const outputElement = /** @type {HTMLTextAreaElement} */ (document.getElementById('output'))
 const copyButtonElement = document.getElementById('copy')
 
+function disableCopyButton() {
+  if (!copyButtonElement) return
+  copyButtonElement.setAttribute('disabled', '')
+}
+
 async function getPRInfo() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
 
   if (!tab.url.includes('github.com')) {
     outputElement.value = 'This extension only works on Github.'
+    disableCopyButton()
     return
   }
 
@@ -14,6 +20,7 @@ async function getPRInfo() {
 
   if (!isPullRequest && !isIssue) {
     outputElement.value = 'Must be a pull request or an issue.'
+    disableCopyButton()
     return
   }
 
