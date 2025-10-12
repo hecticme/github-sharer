@@ -1,6 +1,13 @@
 const outputElement = /** @type {HTMLTextAreaElement} */ (document.getElementById('output'))
 const copyButtonElement = document.getElementById('copy')
 
+const data = {
+  projectName: '',
+  title: '',
+  assignee: '',
+  referenceHref: '',
+}
+
 function disableCopyButton() {
   if (!copyButtonElement) return
   copyButtonElement.setAttribute('disabled', '')
@@ -41,11 +48,21 @@ async function getPRInfo() {
 
       const referenceHref = `${window.location.origin}/${pathParts.slice(1, 5).join('/')}`
 
-      return `[Project] ${projectName}\n[Task]: review: ${title}\n[Assignee]\n[Reference] ${referenceHref}`
+      return {
+        projectName,
+        title,
+        referenceHref,
+      }
     },
   })
 
-  outputElement.value = result
+  Object.assign(data, {
+    projectName: result.projectName,
+    title: result.title,
+    referenceHref: result.referenceHref,
+  })
+
+  outputElement.value = `[Project] ${data.projectName}\n[Task]: review: ${data.title}\n[Assignee]\n[Reference] ${data.referenceHref}`
 }
 
 let copyTimeout = null
