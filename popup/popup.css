@@ -108,7 +108,12 @@ button {
     box-shadow 250ms var(--transition-timing-base);
 }
 
-.button:hover {
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button:not(:disabled):hover {
   box-shadow: 0 0 0 2px var(--color-background-button);
 }
 
