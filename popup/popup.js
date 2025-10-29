@@ -7,6 +7,7 @@ const data = {
   projectName: '',
   action: 'review',
   title: '',
+  htmlTitle: '',
   assignee: '@ort-frontend',
   referenceHref: '',
 }
@@ -21,6 +22,11 @@ function disableEverything() {
 function refreshOutput() {
   const { projectName, action, title, assignee, referenceHref } = data
   outputElement.value = `[Project] ${projectName}\n[Task]: ${action}: ${title}\n[Assignee] ${assignee}\n[Reference] ${referenceHref}`
+}
+
+function generateHtmlOutput() {
+  const { projectName, action, htmlTitle, assignee, referenceHref } = data
+  return `[Project] ${projectName}<br>[Task]: ${action}: ${htmlTitle}<br>[Assignee] ${assignee}<br>[Reference] ${referenceHref}`
 }
 
 async function getPRInfo() {
@@ -75,6 +81,24 @@ async function getPRInfo() {
         return title ? title.innerText.trim() : '(No title found)'
       }
 
+      function extractPullRequestHtmlTitle() {
+        const oldFormatTitle = /** @type {HTMLElement} */ (document.querySelector('.gh-header-title .js-issue-title'))
+
+        if (oldFormatTitle) {
+          return oldFormatTitle.innerHTML.trim()
+        }
+
+        const newFormatTitle = /** @type {HTMLElement} */ (document.querySelector('.markdown-title'))
+
+        return newFormatTitle ? newFormatTitle.innerHTML.trim() : '(No title found)'
+      }
+
+      function extractIssueHtmlTitle() {
+        const title = /** @type {HTMLElement} */ (document.querySelector('.markdown-title'))
+
+        return title ? title.innerHTML.trim() : '(No title found)'
+      }
+
       const pathParts = window.location.pathname.split('/')
       // github.com/owner/repo-name/pull/7/files --> ['', 'owner', 'repo-name', 'pull', '7', 'files']
       const repoName = pathParts.at(2) ?? ''
@@ -83,12 +107,14 @@ async function getPRInfo() {
         .replace(/\b\w/g, substring => substring.toUpperCase())
 
       const title = isPullRequest ? extractPullRequestTitle() : extractIssueTitle()
+      const htmlTitle = isPullRequest ? extractPullRequestHtmlTitle() : extractIssueHtmlTitle()
 
       const referenceHref = `${window.location.origin}/${pathParts.slice(1, 5).join('/')}`
 
       return {
         projectName,
         title,
+        htmlTitle,
         referenceHref,
       }
     },
@@ -97,6 +123,7 @@ async function getPRInfo() {
   Object.assign(data, {
     projectName: result.projectName,
     title: result.title,
+    htmlTitle: result.htmlTitle,
     referenceHref: result.referenceHref,
   })
 
@@ -106,7 +133,12 @@ async function getPRInfo() {
 let copyTimeout = null
 
 copyButtonElement.addEventListener('click', async () => {
-  await navigator.clipboard.writeText(outputElement.value)
+  await navigator.clipboard.write([
+    new ClipboardItem({
+      'text/html': new Blob([generateHtmlOutput()], { type: 'text/html' }),
+      'text/plain': new Blob([outputElement.value], { type: 'text/plain' }),
+    }),
+  ])
 
   copyButtonElement.innerText = '✅ Copied!'
   if (copyTimeout !== null) {
