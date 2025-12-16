@@ -21,12 +21,12 @@ function disableEverything() {
 
 function refreshOutput() {
   const { projectName, action, title, assignee, referenceHref } = data
-  outputElement.value = `[Project] ${projectName}\n[Task]: ${action}: ${title}\n[Assignee] ${assignee}\n[Reference] ${referenceHref}`
+  outputElement.value = `[Project] ${projectName}\n[Task] ${action}: ${title}\n[Assignee] ${assignee}\n[Reference] ${referenceHref}`
 }
 
 function generateHtmlOutput() {
   const { projectName, action, htmlTitle, assignee, referenceHref } = data
-  return `[Project] ${projectName}<br>[Task]: ${action}: ${htmlTitle}<br>[Assignee] ${assignee}<br>[Reference] ${referenceHref}`
+  return `[Project] ${projectName}<br>[Task] ${action}: ${htmlTitle}<br>[Assignee] ${assignee}<br>[Reference] ${referenceHref}`
 }
 
 async function getPRInfo() {
