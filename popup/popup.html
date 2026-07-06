@@ -10,21 +10,13 @@
     <main class="main">
       <button id="copy" type="button" class="button">Copy</button>
       <hr class="break" />
-      <label for="action" class="label">Action</label>
-      <select name="action" id="action" class="select">
-        <option value="review" selected>review</option>
-        <option value="confirm">confirm</option>
-      </select>
-      <label for="assignee" class="label">Assignee</label>
-      <select name="assignee" id="assignee" class="select">
-        <option value="@ort-frontend" selected>@ort-frontend</option>
-        <option value="@ort-backend">@ort-backend</option>
-        <option value="@ort-internal">@ort-internal</option>
-      </select>
+      <div id="template-picker" class="inputs"></div>
+      <div id="inputs" class="inputs"></div>
       <label for="output" class="label">Output</label>
       <textarea id="output" readonly class="textarea"></textarea>
+      <button id="settings" type="button" class="link-button">⚙ Edit templates</button>
     </main>
 
-    <script src="popup.js"></script>
+    <script type="module" src="popup.js"></script>
   </body>
 </html>

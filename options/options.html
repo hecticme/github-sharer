@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Github Sharer — Settings</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <h1 class="page-title">Github Sharer</h1>
+        <p class="page-subtitle">
+          Configure how content is extracted from GitHub and how it is formatted
+          when copied to your clipboard.
+        </p>
+      </header>
+
+      <section class="card">
+        <div class="card-body">
+          <h2 class="section-title">Templates</h2>
+          <p class="hint">
+            Each template has a body with <code>{{ fieldName }}</code> placeholders
+            and a list of URLs it applies to. When the popup opens, every template
+            matching the page is offered. Newlines become <code>&lt;br&gt;</code> in
+            the HTML copy; selector fields keep their markup, other fields are
+            inserted as plain text.
+          </p>
+          <div id="templates" class="fields"></div>
+        </div>
+        <div class="card-footer">
+          <p class="card-note">Templates are offered in the popup on matching pages.</p>
+          <button id="add-template" type="button" class="btn-secondary">+ Add template</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-body">
+          <h2 class="section-title">Fields</h2>
+          <p class="hint">
+            Each field has a name used in template bodies. Selector fields read the
+            page DOM (trying selectors top to bottom), input fields show a dropdown
+            in the popup, and URL fields read the page address.
+          </p>
+          <div id="fields" class="fields"></div>
+        </div>
+        <div class="card-footer">
+          <p class="card-note">Reference fields in a template body as <code>{{ name }}</code>.</p>
+          <button id="add-field" type="button" class="btn-secondary">+ Add field</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-body">
+          <h2 class="section-title">Import / Export</h2>
+          <p class="hint">
+            Export your templates and fields to a JSON file, or import a previously
+            exported configuration. Importing replaces the current configuration
+            (remember to Save afterwards).
+          </p>
+        </div>
+        <div class="card-footer">
+          <p class="card-note">Importing replaces the current configuration.</p>
+          <div class="row row-start">
+            <button id="export" type="button" class="btn-secondary">Export JSON</button>
+            <button id="import" type="button" class="btn-secondary">Import JSON</button>
+            <input id="import-file" type="file" accept="application/json,.json" hidden>
+          </div>
+        </div>
+      </section>
+
+      <footer class="actions">
+        <span id="status" class="status" role="status"></span>
+        <button id="reset" type="button" class="btn-secondary">Reset to defaults</button>
+        <button id="save" type="button" class="btn-primary">Save</button>
+      </footer>
+    </main>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

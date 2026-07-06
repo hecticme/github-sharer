@@ -61,6 +61,42 @@ button {
   padding: 1rem;
 }
 
+.inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inputs:empty {
+  display: none;
+}
+
+.inputs > .label {
+  text-transform: capitalize;
+}
+
+.link-button {
+  align-self: center;
+
+  border: none;
+
+  padding: 0.25rem;
+
+  font-size: 0.8125rem;
+
+  background: none;
+  color: inherit;
+
+  opacity: 0.7;
+
+  transition: opacity 250ms var(--transition-timing-ease-out);
+}
+
+.link-button:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
 .textarea {
   outline: 1px solid transparent;
 

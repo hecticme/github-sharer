@@ -1,141 +1,263 @@
-const actionSelectElement = /** @type {HTMLSelectElement} */ (document.getElementById('action'))
-const assigneeSelectElement = /** @type {HTMLSelectElement} */ (document.getElementById('assignee'))
-const outputElement = /** @type {HTMLTextAreaElement} */ (document.getElementById('output'))
-const copyButtonElement = document.getElementById('copy')
+import {
+  loadConfig,
+  loadInputValues,
+  loadLastTemplate,
+  saveInputValue,
+  saveLastTemplate,
+} from '../shared/storage.js'
+import {
+  extractUrlField,
+  matchingTemplates,
+  prepareSelectorFields,
+  renderHtml,
+  renderText,
+  tokensIn,
+} from '../shared/engine.js'
 
-const data = {
-  projectName: '',
-  action: 'review',
-  title: '',
-  htmlTitle: '',
-  assignee: '@ort-frontend',
-  referenceHref: '',
+/**
+ * @typedef {import('../shared/defaults.js').Config} Config
+ * @typedef {import('../shared/defaults.js').Field} Field
+ * @typedef {import('../shared/defaults.js').Template} Template
+ * @typedef {import('../shared/engine.js').FieldValue} FieldValue
+ */
+
+const templatePickerElement = /** @type {HTMLDivElement} */ (document.getElementById('template-picker'))
+const inputsElement = /** @type {HTMLDivElement} */ (document.getElementById('inputs'))
+const outputElement = /** @type {HTMLTextAreaElement} */ (document.getElementById('output'))
+const copyButtonElement = /** @type {HTMLButtonElement} */ (document.getElementById('copy'))
+const settingsButtonElement = /** @type {HTMLButtonElement} */ (document.getElementById('settings'))
+
+/** @type {Config | null} */
+let config = null
+
+/** @type {Record<string, FieldValue>} */
+const values = {}
+
+/** @type {Array<Template>} */
+let available = []
+
+/** @type {Template | null} */
+let selected = null
+
+/** @type {ReturnType<typeof setTimeout> | null} */
+let copyTimeout = null
+
+function refreshOutput() {
+  if (selected) {
+    outputElement.value = renderText(selected.body, values)
+  }
 }
 
 function disableEverything() {
-  copyButtonElement?.setAttribute('disabled', '')
-  actionSelectElement?.setAttribute('disabled', '')
-  assigneeSelectElement?.setAttribute('disabled', '')
-  outputElement?.setAttribute('disabled', '')
+  copyButtonElement.setAttribute('disabled', '')
+  outputElement.setAttribute('disabled', '')
 }
 
-function refreshOutput() {
-  const { projectName, action, title, assignee, referenceHref } = data
-  outputElement.value = `[Project] ${projectName}\n[Task] ${action}: ${title}\n[Assignee] ${assignee}\n[Reference] ${referenceHref}`
+/**
+ * @param {Field} field
+ */
+function renderInputDropdown(field) {
+  const label = document.createElement('label')
+  label.className = 'label'
+  label.textContent = field.name
+  label.setAttribute('for', `input-${field.name}`)
+
+  const select = document.createElement('select')
+  select.className = 'select'
+  select.id = `input-${field.name}`
+
+  const current = values[field.name]?.text
+
+  for (const option of field.options ?? []) {
+    const optionElement = document.createElement('option')
+    optionElement.value = option
+    optionElement.textContent = option
+    optionElement.selected = option === current
+    select.append(optionElement)
+  }
+
+  select.addEventListener('change', async event => {
+    const { value } = /** @type {HTMLSelectElement} */ (event.target)
+    values[field.name] = { text: value, html: value, raw: false }
+    await saveInputValue(field.name, value)
+    refreshOutput()
+  })
+
+  inputsElement.append(label, select)
 }
 
-function generateHtmlOutput() {
-  const { projectName, action, htmlTitle, assignee, referenceHref } = data
-  return `[Project] ${projectName}<br>[Task] ${action}: ${htmlTitle}<br>[Assignee] ${assignee}<br>[Reference] ${referenceHref}`
-}
+/**
+ * Show only the input dropdowns referenced by the selected template.
+ */
+function renderInputs() {
+  inputsElement.replaceChildren()
 
-async function getPRInfo() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-
-  if (!tab.url.includes('github.com')) {
-    outputElement.value = 'This extension only works on Github.'
-    disableEverything()
+  if (!config || !selected) {
     return
   }
 
-  const isPullRequest = tab.url.includes('/pull/')
-  const isIssue = tab.url.includes('/issues/')
+  const referenced = new Set(tokensIn(selected.body))
 
-  if (!isPullRequest && !isIssue) {
-    outputElement.value = 'Must be a pull request or an issue.'
-    disableEverything()
-    return
+  for (const field of config.fields) {
+    if (field.type === 'input' && referenced.has(field.name)) {
+      renderInputDropdown(field)
+    }
   }
+}
 
-  const { lastAction = 'review' } = await chrome.storage.local.get(['lastAction'])
-  data.action = lastAction
-  if (actionSelectElement) {
-    actionSelectElement.value = lastAction
-  }
-
-  const { lastAssignee = '@ort-frontend' } = await chrome.storage.local.get(['lastAssignee'])
-  data.assignee = lastAssignee
-  if (assigneeSelectElement) {
-    assigneeSelectElement.value = lastAssignee
-  }
-
-  const [{ result }] = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    args: [isPullRequest],
-    func: (isPullRequest) => {
-      function extractPullRequestTitle() {
-        const oldFormatTitle = /** @type {HTMLElement} */ (document.querySelector('.gh-header-title .js-issue-title'))
-
-        if (oldFormatTitle) {
-          return oldFormatTitle.innerText.trim()
-        }
-
-        const newFormatTitle = /** @type {HTMLElement} */ (document.querySelector('.markdown-title'))
-
-        return newFormatTitle ? newFormatTitle.innerText.trim() : '(No title found)'
-      }
-
-      function extractIssueTitle() {
-        const title = /** @type {HTMLElement} */ (document.querySelector('.markdown-title'))
-
-        return title ? title.innerText.trim() : '(No title found)'
-      }
-
-      function extractPullRequestHtmlTitle() {
-        const oldFormatTitle = /** @type {HTMLElement} */ (document.querySelector('.gh-header-title .js-issue-title'))
-
-        if (oldFormatTitle) {
-          return oldFormatTitle.innerHTML.trim()
-        }
-
-        const newFormatTitle = /** @type {HTMLElement} */ (document.querySelector('.markdown-title'))
-
-        return newFormatTitle ? newFormatTitle.innerHTML.trim() : '(No title found)'
-      }
-
-      function extractIssueHtmlTitle() {
-        const title = /** @type {HTMLElement} */ (document.querySelector('.markdown-title'))
-
-        return title ? title.innerHTML.trim() : '(No title found)'
-      }
-
-      const pathParts = window.location.pathname.split('/')
-      // github.com/owner/repo-name/pull/7/files --> ['', 'owner', 'repo-name', 'pull', '7', 'files']
-      const repoName = pathParts.at(2) ?? ''
-      const projectName = repoName
-        .replace(/[-_]/g, ' ')
-        .replace(/\b\w/g, substring => substring.toUpperCase())
-
-      const title = isPullRequest ? extractPullRequestTitle() : extractIssueTitle()
-      const htmlTitle = isPullRequest ? extractPullRequestHtmlTitle() : extractIssueHtmlTitle()
-
-      const referenceHref = `${window.location.origin}/${pathParts.slice(1, 5).join('/')}`
-
-      return {
-        projectName,
-        title,
-        htmlTitle,
-        referenceHref,
-      }
-    },
-  })
-
-  Object.assign(data, {
-    projectName: result.projectName,
-    title: result.title,
-    htmlTitle: result.htmlTitle,
-    referenceHref: result.referenceHref,
-  })
-
+/**
+ * @param {Template} template
+ */
+function selectTemplate(template) {
+  selected = template
+  renderInputs()
   refreshOutput()
 }
 
-let copyTimeout = null
+function renderPicker() {
+  templatePickerElement.replaceChildren()
+
+  if (available.length <= 1) {
+    return
+  }
+
+  const label = document.createElement('label')
+  label.className = 'label'
+  label.textContent = 'Template'
+  label.setAttribute('for', 'template-select')
+
+  const select = document.createElement('select')
+  select.className = 'select'
+  select.id = 'template-select'
+
+  available.forEach((template, index) => {
+    const optionElement = document.createElement('option')
+    optionElement.value = String(index)
+    optionElement.textContent = template.name || `Template ${index + 1}`
+    optionElement.selected = template === selected
+    select.append(optionElement)
+  })
+
+  select.addEventListener('change', async event => {
+    const { value } = /** @type {HTMLSelectElement} */ (event.target)
+    const template = available[Number(value)]
+    selectTemplate(template)
+    await saveLastTemplate(template.name)
+  })
+
+  templatePickerElement.append(label, select)
+}
+
+/**
+ * @param {string} url
+ * @param {number | undefined} tabId
+ */
+async function extractSelectorFields(url, tabId) {
+  if (!config) {
+    return
+  }
+
+  const selectorFields = prepareSelectorFields(url, config.fields)
+
+  if (selectorFields.length === 0 || tabId == null) {
+    for (const field of selectorFields) {
+      values[field.name] = { text: field.fallback, html: field.fallback, raw: true }
+    }
+    return
+  }
+
+  try {
+    const [{ result }] = await chrome.scripting.executeScript({
+      target: { tabId },
+      args: [selectorFields],
+      func: fields => {
+        /** @type {Record<string, { text: string, html: string }>} */
+        const extracted = {}
+
+        for (const field of fields) {
+          let text = field.fallback
+          let html = field.fallback
+
+          for (const selector of field.selectors) {
+            let element = null
+            try {
+              element = /** @type {HTMLElement | null} */ (document.querySelector(selector))
+            } catch {
+              element = null
+            }
+
+            if (element) {
+              text = element.innerText.trim()
+              html = element.innerHTML.trim()
+              break
+            }
+          }
+
+          extracted[field.name] = { text, html }
+        }
+
+        return extracted
+      },
+    })
+
+    for (const [name, { text, html }] of Object.entries(result ?? {})) {
+      values[name] = { text, html, raw: true }
+    }
+  } catch {
+    for (const field of selectorFields) {
+      values[field.name] = { text: field.fallback, html: field.fallback, raw: true }
+    }
+  }
+}
+
+async function init() {
+  config = await loadConfig()
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+  const url = tab?.url ?? ''
+
+  available = matchingTemplates(url, config.templates)
+
+  if (available.length === 0) {
+    outputElement.value = 'No templates match this page.\nAdd or adjust templates in the settings.'
+    disableEverything()
+    return
+  }
+
+  const inputValues = await loadInputValues()
+
+  for (const field of config.fields) {
+    if (field.type === 'input') {
+      const options = field.options ?? []
+      const stored = inputValues[field.name]
+      const initial = options.includes(stored)
+        ? stored
+        : (field.default ?? options[0] ?? '')
+
+      values[field.name] = { text: initial, html: initial, raw: false }
+    } else if (field.type === 'url') {
+      const value = extractUrlField(url, field)
+      values[field.name] = { text: value, html: value, raw: false }
+    }
+  }
+
+  await extractSelectorFields(url, tab?.id)
+
+  const lastName = await loadLastTemplate()
+  selected = available.find(template => template.name === lastName) ?? available[0]
+
+  renderPicker()
+  selectTemplate(selected)
+}
 
 copyButtonElement.addEventListener('click', async () => {
+  if (!selected) {
+    return
+  }
+
   await navigator.clipboard.write([
     new ClipboardItem({
-      'text/html': new Blob([generateHtmlOutput()], { type: 'text/html' }),
+      'text/html': new Blob([renderHtml(selected.body, values)], { type: 'text/html' }),
       'text/plain': new Blob([outputElement.value], { type: 'text/plain' }),
     }),
   ])
@@ -149,26 +271,8 @@ copyButtonElement.addEventListener('click', async () => {
   }, 1000)
 })
 
-assigneeSelectElement.addEventListener('change', async event => {
-  const { value } = /** @type {HTMLSelectElement} */ (event.target)
-
-  data.assignee = value
-  await chrome.storage.local.set({
-    lastAssignee: value,
-  })
-
-  refreshOutput()
+settingsButtonElement.addEventListener('click', () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html') })
 })
 
-actionSelectElement.addEventListener('change', async event => {
-  const { value } = /** @type {HTMLSelectElement} */ (event.target)
-
-  data.action = value
-  await chrome.storage.local.set({
-    lastAction: value,
-  })
-
-  refreshOutput()
-})
-
-getPRInfo()
+init()
